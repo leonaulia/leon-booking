@@ -1,16 +1,18 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      axios: require.resolve('axios'), // Explicitly resolve axios
+      '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
-    rollupOptions: {
-      external: ['axios'], // Externalize axios to avoid bundling issues
-    },
-  },
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    }
+  }
 });
