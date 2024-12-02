@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 
-// Mock API functions to replace axios
-const api = {
-  get: async () => {
-    return { data: [] }; // Return empty array for initial state
-  },
-  post: async (url, data) => {
-    return { data }; // Echo back the data
-  },
-  delete: async () => {
-    return { data: null }; // Return null for successful deletion
-  }
-};
+// Initialize API handler
+const api = window.axios;
 
 function App() {
   const [bookings, setBookings] = useState([]);
