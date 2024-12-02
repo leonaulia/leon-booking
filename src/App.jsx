@@ -299,5 +299,62 @@ function App() {
     </div>
   );
 }
+// Add these functions to your App.jsx
 
+const fetchBookings = async () => {
+  try {
+    const response = await axios.get('/api/bookings');
+    setBookings(response.data);
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    alert('Failed to load bookings. Please try again.');
+  }
+};
+
+const handleBooking = async () => {
+  if (!selectedRoom || !selectedDate || !startTime || !endTime || !pic || !meetingName) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
+  const newBooking = {
+    room: selectedRoom,
+    date: selectedDate,
+    startTime,
+    endTime,
+    pic,
+    meetingName,
+  };
+
+  try {
+    const response = await axios.post('/api/bookings', newBooking);
+    setBookings((prev) => [...prev, response.data]);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+
+    // Reset form
+    setSelectedRoom('');
+    setSelectedDate('');
+    setStartTime('');
+    setEndTime('');
+    setPic('');
+    setMeetingName('');
+  } catch (error) {
+    if (error.response?.data?.type === 'overlap') {
+      alert('This time slot is already booked. Please choose another time.');
+    } else {
+      alert(error.response?.data?.message || 'Failed to book room. Please try again.');
+    }
+  }
+};
+
+const handleDeleteBooking = async (id) => {
+  try {
+    await axios.delete(`/api/bookings/${id}`);
+    setBookings((prev) => prev.filter(booking => booking.id !== id));
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    alert('Failed to delete booking. Please try again.');
+  }
+};
 export default App;
