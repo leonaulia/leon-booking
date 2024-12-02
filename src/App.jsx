@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 
+// Mock initial data for development
+const initialBookings = [
+  {
+    room: 'room1',
+    date: '2024-12-02',
+    startTime: '09:00',
+    endTime: '10:00',
+    pic: 'John Doe',
+    meetingName: 'Team Sync'
+  }
+];
+
 function App() {
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState(initialBookings);
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -42,8 +54,8 @@ function App() {
         const data = await response.json();
         setBookings(data);
       } catch (error) {
-        setError('Failed to fetch bookings');
         console.error('Error fetching bookings:', error);
+        // Keep using initial bookings in case of error
       }
     };
 
