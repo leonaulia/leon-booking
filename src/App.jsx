@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 
-// Initialize API handler
-const api = window.axios;
-
 function App() {
   const [bookings, setBookings] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState('');
@@ -40,8 +37,10 @@ function App() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await api.get('/api/bookings');
-        setBookings(response.data);
+        const response = await fetch('/api/bookings');
+        if (!response.ok) throw new Error('Failed to fetch bookings');
+        const data = await response.json();
+        setBookings(data);
       } catch (error) {
         setError('Failed to fetch bookings');
         console.error('Error fetching bookings:', error);
@@ -84,8 +83,21 @@ function App() {
     };
 
     try {
-      const response = await api.post('/api/bookings', newBooking);
-      setBookings((prev) => [...prev, response.data]);
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newBooking),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to book room');
+      }
+
+      const data = await response.json();
+      setBookings((prev) => [...prev, data]);
       setShowSuccess(true);
       setError('');
       setTimeout(() => setShowSuccess(false), 3000);
@@ -98,13 +110,18 @@ function App() {
       setPic('');
       setMeetingName('');
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to book room');
+      setError(error.message || 'Failed to book room');
     }
   };
 
   const handleDeleteBooking = async (index) => {
     try {
-      await api.delete(`/api/bookings/${index}`);
+      const response = await fetch(`/api/bookings/${index}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete booking');
+      
       setBookings((prev) => prev.filter((_, i) => i !== index));
       setError('');
     } catch (error) {
