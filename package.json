@@ -12,7 +12,11 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "axios": "^1.5.0" // Added axios as a dependency
+    "axios": "^1.5.0",
+    "lucide-react": "^0.263.1",
+    "@radix-ui/react-alert-dialog": "^1.0.0",
+    "class-variance-authority": "^0.4.0",
+    "clsx": "^1.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
