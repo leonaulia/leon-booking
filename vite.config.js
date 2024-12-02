@@ -7,12 +7,16 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-    },
+    }
   },
   build: {
-    commonjsOptions: {
-      include: [/node_modules/],
-      transformMixedEsModules: true
+    rollupOptions: {
+      external: ['axios'],
+      output: {
+        globals: {
+          axios: 'axios'
+        }
+      }
     }
   }
 });
