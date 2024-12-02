@@ -1,4 +1,18 @@
-import { readBookings, writeBookings } from './utils';
+import fs from 'fs';
+import path from 'path';
+
+const BOOKINGS_FILE = path.join(process.cwd(), 'data', 'bookings.json');
+
+const readBookings = () => {
+  if (!fs.existsSync(BOOKINGS_FILE)) {
+    fs.writeFileSync(BOOKINGS_FILE, JSON.stringify([]));
+  }
+  return JSON.parse(fs.readFileSync(BOOKINGS_FILE));
+};
+
+const writeBookings = (bookings) => {
+  fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2));
+};
 
 export default async function handler(req, res) {
   const method = req.method;
