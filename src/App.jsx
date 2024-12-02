@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
 function App() {
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState(() => {
+    const savedBookings = localStorage.getItem('bookings');
+    return savedBookings ? JSON.parse(savedBookings) : [];
+  });
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -17,28 +20,26 @@ function App() {
     { id: 'room2', name: 'Meeting Room 2' },
   ];
 
-  // Generate time slots from 8 AM to 8 PM
   const timeSlots = Array.from({ length: 13 }, (_, i) => {
     const hour = i + 8;
     return `${hour.toString().padStart(2, '0')}:00`;
   });
 
-  // Check if a time slot is available
   const isTimeSlotAvailable = (room, date, slotTime) => {
-    return !bookings.some(booking => 
-      booking.room === room &&
-      booking.date === date &&
-      slotTime >= booking.startTime &&
-      slotTime < booking.endTime
+    return !bookings.some(
+      (booking) =>
+        booking.room === room &&
+        booking.date === date &&
+        slotTime >= booking.startTime &&
+        slotTime < booking.endTime
     );
   };
 
-  // Update available slots whenever room or date changes
   useEffect(() => {
     if (selectedRoom && selectedDate) {
-      const slots = timeSlots.map(time => ({
+      const slots = timeSlots.map((time) => ({
         time,
-        available: isTimeSlotAvailable(selectedRoom, selectedDate, time)
+        available: isTimeSlotAvailable(selectedRoom, selectedDate, time),
       }));
       setAvailableSlots(slots);
     } else {
@@ -56,12 +57,11 @@ function App() {
       return;
     }
 
-    // Check if the entire duration is available
     const startIndex = timeSlots.indexOf(startTime);
     const endIndex = timeSlots.indexOf(endTime);
     const duration = timeSlots.slice(startIndex, endIndex);
-    
-    const isAvailable = duration.every(time => 
+
+    const isAvailable = duration.every((time) =>
       isTimeSlotAvailable(selectedRoom, selectedDate, time)
     );
 
@@ -79,11 +79,13 @@ function App() {
       meetingName,
     };
 
-    setBookings([...bookings, newBooking]);
+    const updatedBookings = [...bookings, newBooking];
+    setBookings(updatedBookings);
+    localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
 
-    // Reset form
     setSelectedRoom('');
     setStartTime('');
     setEndTime('');
@@ -91,12 +93,17 @@ function App() {
     setMeetingName('');
   };
 
+  const handleDeleteBooking = (index) => {
+    const updatedBookings = bookings.filter((_, i) => i !== index);
+    setBookings(updatedBookings);
+    localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow p-6">
         <h1 className="text-2xl font-bold mb-6">Meeting Room Booking</h1>
-        
-        {/* Meeting Details */}
+
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-2">Person in Charge (PIC)</label>
@@ -106,7 +113,6 @@ function App() {
               onChange={(e) => setPic(e.target.value)}
               className="w-full p-2 border rounded"
               placeholder="Enter PIC name"
-              required
             />
           </div>
           <div>
@@ -117,12 +123,10 @@ function App() {
               onChange={(e) => setMeetingName(e.target.value)}
               className="w-full p-2 border rounded"
               placeholder="Enter meeting name"
-              required
             />
           </div>
         </div>
 
-        {/* Room Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Select Room</label>
           <select
@@ -131,7 +135,7 @@ function App() {
             className="w-full p-2 border rounded"
           >
             <option value="">Choose a room</option>
-            {rooms.map(room => (
+            {rooms.map((room) => (
               <option key={room.id} value={room.id}>
                 {room.name}
               </option>
@@ -139,7 +143,6 @@ function App() {
           </select>
         </div>
 
-        {/* Date Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Select Date</label>
           <input
@@ -151,7 +154,6 @@ function App() {
           />
         </div>
 
-        {/* Availability Display */}
         {selectedRoom && selectedDate && (
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-3">Availability</h3>
@@ -160,7 +162,7 @@ function App() {
                 <div
                   key={time}
                   className={`p-2 rounded text-center text-sm ${
-                    available 
+                    available
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}
@@ -172,7 +174,6 @@ function App() {
           </div>
         )}
 
-        {/* Time Selection */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-2">Start Time</label>
@@ -183,8 +184,8 @@ function App() {
             >
               <option value="">Select start time</option>
               {availableSlots
-                .filter(slot => slot.available)
-                .map(slot => (
+                .filter((slot) => slot.available)
+                .map((slot) => (
                   <option key={slot.time} value={slot.time}>
                     {slot.time}
                   </option>
@@ -200,15 +201,16 @@ function App() {
             >
               <option value="">Select end time</option>
               {timeSlots
-                .filter(time => time > startTime)
-                .map(time => (
-                  <option key={time} value={time}>{time}</option>
+                .filter((time) => time > startTime)
+                .map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
                 ))}
             </select>
           </div>
         </div>
 
-        {/* Book Button */}
         <button
           onClick={handleBooking}
           disabled={!selectedRoom || !selectedDate || !startTime || !endTime || !pic || !meetingName}
@@ -217,14 +219,12 @@ function App() {
           Book Room
         </button>
 
-        {/* Success Message */}
         {showSuccess && (
           <div className="mt-4 p-2 bg-green-100 text-green-700 rounded">
             Room booked successfully!
           </div>
         )}
 
-        {/* Current Bookings */}
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-4">Current Bookings</h2>
           <div className="space-y-4">
@@ -232,12 +232,22 @@ function App() {
               <div key={index} className="border rounded p-4">
                 <div className="flex justify-between">
                   <div>
-                    <p className="font-medium">
-                      {booking.meetingName}
+                    <p className="font-medium">{booking.meetingName}</p>
+                    <p className="text-sm text-gray-500">
+                      {booking.room} - {booking.date}
                     </p>
-                    <p className
+                    <p className="text-sm text-gray-500">
+                      {booking.startTime} to {booking.endTime}
+                    </p>
                   </div>
+                  <button
+                    onClick={() => handleDeleteBooking(index)}
+                    className="text-red-500 hover:underline"
+                  >
+                    Delete
+                  </button>
                 </div>
+                <p className="text-sm text-gray-500">PIC: {booking.pic}</p>
               </div>
             ))}
             {bookings.length === 0 && (
