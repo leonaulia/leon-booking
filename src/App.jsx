@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Trash2 } from 'lucide-react';
 
-// Mock initial data for development
-const initialBookings = [
-  {
-    room: 'room1',
-    date: '2024-12-02',
-    startTime: '09:00',
-    endTime: '10:00',
-    pic: 'John Doe',
-    meetingName: 'Team Sync'
-  }
-];
-
 function App() {
-  const [bookings, setBookings] = useState(initialBookings);
+  const [bookings, setBookings] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -49,13 +38,11 @@ function App() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch('/api/bookings');
-        if (!response.ok) throw new Error('Failed to fetch bookings');
-        const data = await response.json();
-        setBookings(data);
+        const response = await axios.get('/api/bookings');
+        setBookings(response.data);
       } catch (error) {
+        setError('Failed to fetch bookings');
         console.error('Error fetching bookings:', error);
-        // Keep using initial bookings in case of error
       }
     };
 
@@ -95,21 +82,8 @@ function App() {
     };
 
     try {
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newBooking),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to book room');
-      }
-
-      const data = await response.json();
-      setBookings((prev) => [...prev, data]);
+      const response = await axios.post('/api/bookings', newBooking);
+      setBookings((prev) => [...prev, response.data]);
       setShowSuccess(true);
       setError('');
       setTimeout(() => setShowSuccess(false), 3000);
@@ -122,18 +96,13 @@ function App() {
       setPic('');
       setMeetingName('');
     } catch (error) {
-      setError(error.message || 'Failed to book room');
+      setError(error.response?.data?.message || 'Failed to book room');
     }
   };
 
   const handleDeleteBooking = async (index) => {
     try {
-      const response = await fetch(`/api/bookings/${index}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete booking');
-      
+      await axios.delete(`/api/bookings/${index}`);
       setBookings((prev) => prev.filter((_, i) => i !== index));
       setError('');
     } catch (error) {
